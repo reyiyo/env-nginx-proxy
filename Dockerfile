@@ -1,5 +1,7 @@
 FROM nginx:alpine
 
+RUN apk add --upgrade --no-cache openssl
+
 COPY entrypoint.sh /entrypoint.sh
 
 EXPOSE 80

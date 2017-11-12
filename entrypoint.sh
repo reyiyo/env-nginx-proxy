@@ -6,6 +6,8 @@ set -euo pipefail
 : "${UPSTREAM_HOST:?Set UPSTREAM_HOST using --env}"
 : "${UPSTREAM_PORT:?Set UPSTREAM_PORT using --env}"
 PROTOCOL=${PROTOCOL:=HTTP}
+USER=${USER:=''}
+PASSWORD=${PASSWORD:=''}
 
 # Template an nginx.conf
 cat <<EOF >/etc/nginx/nginx.conf
@@ -38,12 +40,23 @@ http {
       proxy_read_timeout      90;
       proxy_buffering off;
       proxy_ignore_client_abort on;
-      
+            
+      #Auth turned off by default      
+      ##auth_basic "Login required";
+      ##auth_basic_user_file /etc/nginx/.htpasswd;
+
       proxy_pass http://${UPSTREAM_HOST}:${UPSTREAM_PORT};
     }
   }
 }
 EOF
+  if [ -n "${USER}" ]; then
+    echo -n ${USER}':' >> /etc/nginx/.htpasswd
+    echo $(openssl passwd -apr1 ${PASSWORD}) >> /etc/nginx/.htpasswd
+    # Activate auth
+    sed -e 's/\##//g' /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.auth
+    mv /etc/nginx/nginx.conf.auth /etc/nginx/nginx.conf
+  fi
 elif [ "$PROTOCOL" == "TCP" ]; then
 cat <<EOF >>/etc/nginx/nginx.conf
 stream {
