@@ -9,6 +9,15 @@ PROTOCOL=${PROTOCOL:=HTTP}
 USER=${USER:=''}
 PASSWORD=${PASSWORD:=''}
 
+if [ "$PROTOCOL" = "HTTP" ]; then
+  PROTO=http
+fi
+
+if [ "$PROTOCOL" = "HTTPS" ]; then
+  PROTO=https
+fi
+
+
 # Template an nginx.conf
 cat <<EOF >/etc/nginx/nginx.conf
 user nginx;
@@ -18,7 +27,7 @@ events {
 }
 EOF
 
-if [ "$PROTOCOL" = "HTTP" ]; then
+if [ "$PROTOCOL" = "HTTP" ] || [ "$PROTOCOL" = "HTTPS" ]; then
 cat <<EOF >>/etc/nginx/nginx.conf
 http {
   real_ip_header X-Forwarded-For;
@@ -44,8 +53,9 @@ http {
       #Auth turned off by default      
       ##auth_basic "Login required";
       ##auth_basic_user_file /etc/nginx/.htpasswd;
+      ##proxy_set_header       Authorization "";
 
-      proxy_pass http://${UPSTREAM_HOST}:${UPSTREAM_PORT};
+      proxy_pass ${PROTO}://${UPSTREAM_HOST}:${UPSTREAM_PORT};
     }
   }
 }
@@ -67,7 +77,7 @@ stream {
 }
 EOF
 else
-echo "Unknown PROTOCOL. Valid values are HTTP or TCP."
+echo "Unknown PROTOCOL. Valid values are HTTP, HTTPS or TCP."
 fi
 
 echo "Proxy ${PROTOCOL} for ${UPSTREAM_HOST}:${UPSTREAM_PORT}"
