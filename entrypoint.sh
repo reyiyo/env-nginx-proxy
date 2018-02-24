@@ -49,11 +49,17 @@ http {
       proxy_read_timeout      90;
       proxy_buffering off;
       proxy_ignore_client_abort on;
-            
-      #Auth turned off by default      
+
+      #Auth turned off by default
       ##auth_basic "Login required";
       ##auth_basic_user_file /etc/nginx/.htpasswd;
       ##proxy_set_header       Authorization "";
+
+      gzip on;
+      gzip_types      *;
+      gzip_comp_level 5;
+      gzip_proxied    any;
+      gzip_vary       on;
 
       proxy_pass ${PROTO}://${UPSTREAM_HOST}:${UPSTREAM_PORT};
     }
